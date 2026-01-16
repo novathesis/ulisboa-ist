@@ -17,7 +17,7 @@
 }
 
 
-\ifdocfinal{\ntsetup{print/secondcover=true}}{}
+\ifdocfinal{\ntsetup{print/frontpage=true}}{}
 
 % Faculty / School
 \school(pt):={Instituto Superior Técnico}
@@ -194,8 +194,7 @@
 %% Draw the cover page
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \AtEndPreamble{%
-  \LoadHelveticaLikeFont%
-  % \RequirePackage{gillius2}%
+  %\LoadHelveticaLikeFont%  % \RequirePackage{gillius2}%
 }
 
 % \NTAddToHook{cover/1-1/text/pre}{%
@@ -215,9 +214,9 @@
 \ntaddtocover[vspace=5mm,hspace=23mm]{1-1,2-1}{%
     \fontsize{15}{17}\selectfont%
   % \SetTracking[ spacing = {25*,166, } ]{ encoding = * }{ 25 }%
-  \textbf{\textls[25]{\THEuniversity(\@LANG@COVER)}}\\%
+  \textbf{\textls[25]{\ToUppercase{\theuniversity(\@LANG@COVER)}}}\\%
   \vspace{2mm}%
-  \textbf{\textls[25]{\THEschool(\@LANG@COVER)}}%
+  \textbf{\textls[25]{\ToUppercase{\theschool(\@LANG@COVER)}}}%
 }
 
 % Images
@@ -228,7 +227,7 @@
 % % Title of Dissertation
 \ntaddtocover[vspace=1.2cm,height=1.35cm,valign=c]{1-1,2-1}{%
     \fontsize{11}{12}\selectfont%
-  \textbf{\thedoctitle(\@LANG@COVER,main,cover)}%
+  \textbf{\thedoctitle(\@LANG@COVER,main)}%
 }
 
 % Author name
