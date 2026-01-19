@@ -2,7 +2,7 @@
 # NOVATHESIS — Makefile
 #----------------------------------------------------------------------------
 #
-# Version 7.9.3 (2026-01-15)
+# Version 7.9.4 (2026-01-19)
 # Copyright (C) 2004-26 by João M. Lourenço <joao.lourenco@fct.unl.pt>
 
 
@@ -69,7 +69,7 @@ BUILD:=.Build/build.py
 
 #————————————————————————————————————————————————————————————————————————————
 # extract version and date of the template
-VERSION_FILE=NOVAthesisFiles/nt-version.sty
+VERSION_FILE=NOVAthesisFiles/StyFiles/nt-version.sty
 
 VERSION		= $(shell awk -F'[{}]' '/\\novathesisversion/ {print $$4; exit}' '$(VERSION_FILE)')
 DATE		= $(shell awk -F'[{}]' '/\\novathesisdate/    {print $$4; exit}' '$(VERSION_FILE)')
@@ -317,8 +317,6 @@ gclean:
 
 #————————————————————————————————————————————————————————————————————————————
 # File containing version info
-VERSION_FILE = NOVAthesisFiles/nt-version.sty
-
 .PHONY: bump0 bump1 bump2 bump3
 bump0 bump1 bump2 bump3:
 ifneq ($@,bump0)
@@ -328,13 +326,13 @@ endif
 	$(MAKE) bcrtp
 
 .PHONY: bcrtp bcrp bcp crp cp rp crtp rtp tp 
-bcrtp: build-phd-final-en crtp
+bcrtp: build-phd-en crtp
 
-bcrp: build-phd-final-en crp
+bcrp: build-phd-en crp
 
-bcp: build-phd-final-en commit push
+bcp: build-phd-en commit push
 
-bcp-f: build-phd-final-en commit push-force
+bcp-f: build-phd-en commit push-force
 
 crp: commit rebase push
 
@@ -360,14 +358,68 @@ custom:
 #############################################################################
 # BUILD
 #############################################################################
-.PHONY: build build-en build-phd-final-en build-pt build-phd-final-pt
-build: build-en
 
-build-en build-phd-final-en: validate-config check-env check-build
-	$(BUILD) $(SCHL) --mode 1 --lang en $(BFLAGS)
 
-build-pt build-phd-final-pt: validate-config check-env check-build
-	$(BUILD) $(SCHL) --mode 1 --lang pt $(BFLAGS)
+# 1. Define Defaults
+DFL_SCHL := nova.fct
+DFL_TYP  := phd
+DFL_LNG  := en
+
+# 2. Define Extraction Function
+# Note: Regex changed to "^[[:space:]]*" to strictly match start of line + spaces
+# This ignores lines starting with %
+GET_TEX_VAR = sed -n 's/^[[:space:]]*\\ntsetup{$(1)=\([^}]*\).*/\1/p' 0-Config/1_novathesis.tex
+
+# 3. Logic: Try to get from file; if empty, use Default
+# We store the raw extraction in a temporary variable (_) to check if it exists
+
+# Handle SCHL (Needs special tr handling only if extracted)
+_FILE_SCHL := $(shell $(call GET_TEX_VAR,school))
+SCHL := $(if $(_FILE_SCHL),$(shell echo $(_FILE_SCHL) | tr '/-' '..'),$(DFL_SCHL))
+
+# Handle TYP
+_FILE_TYP := $(shell $(call GET_TEX_VAR,doctype))
+TYP := $(or $(_FILE_TYP),$(DFL_TYP))
+
+# Handle LNG
+_FILE_LNG := $(shell $(call GET_TEX_VAR,lang))
+LNG := $(or $(_FILE_LNG),$(DFL_LNG))
+
+# 4. Define Build Rules
+.PHONY: build
+# Default build uses the variables calculated above
+build: build-$(SCHL)-$(TYP)-$(LNG)
+
+# Pattern rule to parse arguments from the target name
+build-%: 
+	@echo "=== Parsing build target: build-$* ==="
+	$(eval PATTERN := $(subst .o,,$*))
+	$(eval PARTS := $(subst -, ,$(PATTERN)))
+	$(eval WORD_COUNT := $(words $(PARTS)))
+	@SCHL="$(SCHL)"; \
+	TYP="$(TYP)"; \
+	LNG="$(LNG)"; \
+	\
+	if [ "$(WORD_COUNT)" = "3" ]; then \
+		SCHL=$(word 1,$(PARTS)); \
+		TYP=$(word 2,$(PARTS)); \
+		LNG=$(word 3,$(PARTS)); \
+	elif [ "$(WORD_COUNT)" = "2" ]; then \
+		TYP=$(word 1,$(PARTS)); \
+		LNG=$(word 2,$(PARTS)); \
+	elif [ "$(WORD_COUNT)" = "1" ]; then \
+		LNG=$(word 1,$(PARTS)); \
+	else \
+		echo "Error: Invalid format '$*'. Expected 1-3 arguments."; \
+		exit 1; \
+	fi; \
+	\
+	FINAL_SCHL=$$(echo $$SCHL | sed 's/\./\//; s/\./\//; s/\./-/g'); \
+	\
+	echo "=== Building ==="; \
+	echo "SCHL=$$FINAL_SCHL, TYP=$$TYP, LNG=$$LNG"; \
+	echo "Command: $(BUILD) $$FINAL_SCHL --doctype $$TYP --lang $$LNG --rename-pdf --mode 1 --docstatus final -o $(PWD) $(BFLAGS)"; \
+	$(BUILD) $$FINAL_SCHL --doctype $$TYP --lang $$LNG --rename-pdf --mode 1 --docstatus final -o $(PWD) $(BFLAGS)
 
 
 

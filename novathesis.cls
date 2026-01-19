@@ -4,7 +4,7 @@
 %%  NOVATHESIS — novathesis.cls
 %% ----------------------------------------------------------------------------
 %%
-%% Version 7.9.3 (2026-01-15)
+%% Version 7.9.4 (2026-01-19)
 %% Copyright (C) 2004-26 by João M. Lourenço <joao.lourenco@fct.unl.pt>
 %% Departamento de Informática (www.di.fct.unl.pt)
 %% Faculdade de Ciências e Tecnologia (www.fct.unl.pt)
@@ -77,7 +77,7 @@
 %%      or in the subreddit r/novathesis
 %%          https://www.reddit.com/r/novathesis/
 
-\ProvidesClass{novathesis}[2026-01-14 v7.9.3 novathesis template class file]
+\ProvidesClass{novathesis}[Version 7.9.4 (2026-01-19) novathesis template class file]
 \NeedsTeXFormat{LaTeX2e}[2020-02-02]
 
 %% ----------------------------------------------------------------------------
@@ -92,7 +92,6 @@
 \newcommand*{\NTAddToHook}[2]{\options{/@nt/hook/#1/.newpush={#2}}}
 \newcommand*{\NTRunHook}[1]{\optionlistdo{/@nt/hook/#1}{##1}}
 
-
 %============================================================
 \def\DIRCONFIG{0-Config}
 \def\DIRFRONTMATTER{1-FrontMatter}
@@ -101,6 +100,7 @@
 \def\DIRBIBLIOGRAPHY{4-Bibliography}
 \def\DIRFIGURES{5-Figures}
 \def\DIRNTFILES{./NOVAthesisFiles}
+\def\DIRSTYFILES{\DIRNTFILES/StyFiles}
 \def\DIRFONTSTYLES{\DIRNTFILES/FontStyles}
 \def\DIRSCHOOLS{\DIRNTFILES/Schools}
 \def\DIRSTRINGS{\DIRNTFILES/Strings}
@@ -135,16 +135,18 @@
 \RequirePackage{xstring}
 \RequirePackage{catchfile}
 \RequirePackage{varwidth}
+\RequirePackage{calc}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 2. TEMPLATE CORE
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\xappto\input@path{{\DIRNTFILES/}{\DIRSTRINGS/}}
+\xappto\input@path{{\DIRSTYFILES/}{\DIRSTRINGS/}}
 
 \RequirePackage{options-ext}
 \RequirePackage{nt-version}
 \RequirePackage{memory2}
-\RequirePackage{NOVAthesisFiles/stocksize}
+\RequirePackage{memstore}
+\RequirePackage{stocksize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 3. FONTS & ENCODINGS
@@ -178,7 +180,15 @@
 %% 4. LANGUAGE & LOCALIZATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \RequirePackage[english]{babel}
-% \RequirePackage{translator}
+\AtBeginDocument{%
+  \ifx\bbl@ensure@bcp\@undefined
+    \newcommand{\bbl@ensure@bcp}[2]{#2}%
+  \fi
+  \ifx\bbl@ensure@english\@undefined
+    \newcommand{\bbl@ensure@english}[1]{#1}%
+  \fi
+}
+
 \RequirePackage{csquotes}  % MUST be loaded before biblatex
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -694,6 +704,25 @@
   \__user_chapter_logic:e { #1 }
  }
 
+
+\NewDocumentCommand{\UniquifyList}{m o}
+  {
+    % 1. Fully expand the input and set it to a local clist
+    \clist_set:Ne \l_tmpa_clist { #1 }
+    % 2. Remove duplicates
+    \clist_remove_duplicates:N \l_tmpa_clist
+    % 3. Check if the optional argument #2 is present
+    \IfValueTF { #2 }
+      {
+        % If #2 is present: Store the result into the macro provided in #2
+        \tl_set:Ne #2 { \clist_use:Nn \l_tmpa_clist { , } }
+      }
+      {
+        % If #2 is NOT present: Print the list directly to the document
+        \clist_use:Nn \l_tmpa_clist { , }
+      }
+  }
+
 \ExplSyntaxOff
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -848,7 +877,7 @@
   doctype/.new choice           = {phd, phdprop, phdplan, msc, mscplan, bsc, plain},
   docstatus/.new choice         = {unset, working, provisional, final}, % in not defined by user, unset will be replaced  “working”
   media/.new choice             = {screen, paper},
-  spine/layout/.new choice      = {unset, trim, off},
+  spine/layout/.new choice      = {unset, trim, false},
   spine/width/.new length       = {0pt},
   % abstract/deforder/.new choice = {default={\@LANG@MAIN,en}, en={en,pt}},
   % abstract/theorder/.new list   = {unset},
@@ -894,7 +923,7 @@
   print/adviser/.new toggle     = true,    % fake option - adviser should always be printed
   print/otherlists/.new value   = frontmatter,  % print other lists (lof, lof, lol, …) in the front matter
   print/glossaries/.new value   = frontmatter,  % print glossaries in the front matter
-  print/frontpage/.new toggle = false,
+  print/frontpage/.new toggle   = false,
   print/copyright/.new toggle   = true,
   print/timestamp/.new toggle   = true,
   print/index/.new toggle       = false,
@@ -906,7 +935,6 @@
   print/sdgs/hspace/.new dim    = {5mm},   % any measure
   print/sdgs/vspace/.new dim    = {4mm},   % any measure
   % MISC
-  numberallpages/.new toggle    = false,
   glossaries/list/reverse/.new toggle       = true,
   tocintoc/.new toggle          = true,
   % DEBUG
@@ -1160,21 +1188,21 @@
 }
 
 
-\newdata{langlong}
-\langlong(cat):={catalan}
-\langlong(cz):={czech}
-\langlong(de):={german}
-\langlong(dk):={danish}
-\langlong(en):={english}
-\langlong(es):={spanish}
-\langlong(fr):={french}
-\langlong(gr):={greek}
-\langlong(it):={italian}
-\langlong(nl):={dutch}
-\langlong(pl):={polish}
-\langlong(pt):={portuguese}
-\langlong(sk):={slovak}
-\langlong(uk):={ukrainian}
+\NewMemStore{LangLong}
+\SetLangLong(cat):={catalan}
+\SetLangLong(cz):={czech}
+\SetLangLong(de):={german}
+\SetLangLong(dk):={danish}
+\SetLangLong(en):={english}
+\SetLangLong(es):={spanish}
+\SetLangLong(fr):={french}
+\SetLangLong(gr):={greek}
+\SetLangLong(it):={italian}
+\SetLangLong(nl):={dutch}
+\SetLangLong(pl):={polish}
+\SetLangLong(pt):={portuguese}
+\SetLangLong(sk):={slovak}
+\SetLangLong(uk):={ukrainian}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1306,7 +1334,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand*{\ntselectlang}[1]{%
   \xdef\@LSHORT{#1}%
-  \xdef\@LLONG{\thelanglong(#1)}%
+  \xdef\@LLONG{\GetLangLong(#1)}%
   \selectlanguage{\@LLONG}%
 }
 
@@ -1408,7 +1436,7 @@
 
 \newdata{university}
 \newdata{school}
-\newdata{department}
+% \newdata{department}
 
 \newdata{doctitle}
 
@@ -1491,10 +1519,10 @@
 \options{/@nt/document/docclass=\@DOCTYPE}
 \def\@DOCCLASS{\option{/@nt/document/docclass}}
 
-\def\@LANG@COVER{\option{/novathesis/lang/cover}}
-\def\@LANG@COPYRIGHT{\option{/novathesis/lang/copyright}}
-\def\@LANG@MAIN{\option{/novathesis/lang/main}}
-\def\@LANG@MAIN@LONG{\thelanglong(\@LANG@MAIN)}
+\edef\@LANG@COVER{\option{/novathesis/lang/cover}}
+\edef\@LANG@COPYRIGHT{\option{/novathesis/lang/copyright}}
+\edef\@LANG@MAIN{\option{/novathesis/lang/main}}
+\edef\@LANG@MAIN@LONG{\GetLangLong(\@LANG@MAIN)}
 
 \@setabstractorder
 \ifdatadefined{abstractorder}(en){}{%
@@ -1549,22 +1577,22 @@
 % --------------------------------------------------------
 % BABEL STUFF
 % \options{/@nt/lang/shorttolong=\@LANG@MAIN}%
-\def\@LANG@LOADED{}
-\def\@langs@loaded@sep{}
-\newcommand*{\@nt@setlangloaded}[1]{%
-      % \typeout{LL=#1}\LL
-      \IfSubStr{,\@LANG@LOADED,}{,#1,}{}
-      {
-        \IfFileExists{\DIRSTRINGS/strings-#1.ldf}%
-                     {\eappto{\@LANG@LOADED}{\@langs@loaded@sep#1}\def\@langs@loaded@sep{,}}%
-                      {\ClassError{novathesis}{File not found: “\DIRSTRINGS/strings-#1.ldf” file!}%
-                                  {Add a file with the translations for this language.}}%
-      }%
-}
-
-\@for\myi:=\expanded{\@LANG@COVER,\@LANG@COPYRIGHT,\@LANG@MAIN,%
-                     \theabstractorder(\@LANG@MAIN)}\do{\@nt@setlangloaded{\myi}}
-\optionlistdo{/novathesis/lang/extra}{\@nt@setlangloaded{##1}}%
+% \def\@LANG@LOADED{}
+% \def\@langs@loaded@sep{}
+% \newcommand*{\@nt@setlangloaded}[1]{%
+%       % \typeout{LL=#1}\LL
+%       \IfSubStr{,\@LANG@LOADED,}{,#1,}{}
+%       {
+%         \IfFileExists{\DIRSTRINGS/strings-#1.ldf}%
+%                      {\eappto{\@LANG@LOADED}{\@langs@loaded@sep#1}\def\@langs@loaded@sep{,}}%
+%                       {\ClassError{novathesis}{File not found: “\DIRSTRINGS/strings-#1.ldf” file!}%
+%                                   {Add a file with the translations for this language.}}%
+%       }%
+% }
+%
+% \@for\myi:=\expanded{\@LANG@COVER,\@LANG@COPYRIGHT,\@LANG@MAIN,%
+%                      \theabstractorder(\@LANG@MAIN)}\do{\@nt@setlangloaded{\myi}}
+% \optionlistdo{/novathesis/lang/extra}{\@nt@setlangloaded{##1}}%
 
 
 \babeladjust{
@@ -1572,10 +1600,10 @@
 }
 % \PassOptionsToPackage{main=\@LANG@MAIN@LONG}{babel}
 \babelprovide[main,import]{\expanded{\@LANG@MAIN@LONG}}
-\@for\myi:=\expanded{\@LANG@LOADED}\do{%
-  % \typeout{BABELLANG=\myi \thelanglong(\myi)}\BABELLANG%
-  \babelprovide[import]{\expanded{\thelanglong(\myi)}}%
-}%
+% \@for\myi:=\expanded{\@LANG@LOADED}\do{%
+%   % \typeout{BABELLANG=\myi \GetLangLong(\myi)}\BABELLANG%
+%   \babelprovide[import]{\GetLangLong(\myi)}%
+% }%
 
 % --------------------------------------------------------
 % FIX BABEL TRANSLATION
@@ -1583,6 +1611,12 @@
 % \RequirePackage{translator} % Support month name translations for pgfcalendar
 \ntselectlang{\@LANG@MAIN}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Create list of loaded languages
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\edef\@LANG@LOADED{\@LANG@COVER, \@LANG@COPYRIGHT, \@LANG@MAIN, \theabstractorder(\@LANG@MAIN)}
+\UniquifyList{\@LANG@LOADED}[\@LANG@LOADED]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FIX BABEL
@@ -1594,23 +1628,22 @@
 %% Include strings for all the languages
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\@for\myi:=\expanded{\@LANG@LOADED}\do{%
+\@for\myi:={\@LANG@LOADED}\do{%
   \InputIfFileExists{\DIRSTRINGS/strings-\myi.ldf}%
-                    {}%
-                    {\ClassError{novathesis}
-                                {File not found: “\DIRSTRINGS/strings-#1.ldf” file!}%
-                                {Add a file with the translations for this language.}}%
+      {}%
+      {\ClassError{novathesis}
+                  {File not found: “\DIRSTRINGS/strings-#1.ldf” file!}%
+                  {Add a file with the translations for this language.}}%
 }%
 
 
-\bkmstring(1-1)={\thebkmstring(cover,\@LANG@MAIN)}
-\bkmstring(1-2)={\thebkmstring(incover,\@LANG@MAIN)}
-\bkmstring(2-1)={\thebkmstring(frontpage,\@LANG@MAIN)}
-\bkmstring(2-2)={\thebkmstring(infrontpage,\@LANG@MAIN)}
-\bkmstring(N-1)={\thebkmstring(inbackcover,\@LANG@MAIN)}
-\bkmstring(N-2)={\thebkmstring(backcover,\@LANG@MAIN)}
-\bkmstring(spine)={\thebkmstring(spine,\@LANG@MAIN)}
-
+\bkmstring(1-1)   = {\thebkmstring(cover,\@LANG@MAIN)}
+\bkmstring(1-2)   = {\thebkmstring(incover,\@LANG@MAIN)}
+\bkmstring(2-1)   = {\thebkmstring(frontpage,\@LANG@MAIN)}
+\bkmstring(2-2)   = {\thebkmstring(infrontpage,\@LANG@MAIN)}
+\bkmstring(N-1)   = {\thebkmstring(inbackcover,\@LANG@MAIN)}
+\bkmstring(N-2)   = {\thebkmstring(backcover,\@LANG@MAIN)}
+\bkmstring(spine) = {\thebkmstring(spine,\@LANG@MAIN)}
 
 \options{/@nt/lang/loaded/.expanded=\@LANG@LOADED}
 
@@ -1650,11 +1683,68 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DEFINITIONS FOR THE REMINDER OF CUSTOMIZATION STUFF
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % --------------------------------------------------------
 % Department
-\def\ntdepartment{\@ifstar{\@ntdepartmentifundef}{\@ntdepartment}}
-\def\@ntdepartmentifundef(#1)#2{\ifdatadefined{department}(#1){}{\@ntdepartment(#1){#2}}}
-\def\@ntdepartment(#1)#2{\department(#1):={#2}}
+%============================================================
+\ExplSyntaxOn
+
+\NewMemStore{Department}
+
+% 1. The Public Command
+% s = star (*)                 <= only define if undefined
+% r() = required ID in parens  <= the lang code
+% m = mandatory value          <= the name of the department
+\NewDocumentCommand {\ntdepartment} { s r() m }
+  {
+    % We pass the star status (boolean) and expanded arguments to the internal logic
+    \nova_process_department:nee { #1 } { #2 } { #3 }
+  }
+
+% 2. Internal Logic
+\cs_new_protected:Npn \nova_process_department:nnn #1 #2 #3
+  {
+    % Handle the optional ID: if empty/NoValue, use 'default'
+    \tl_set:Nn \l_tmpa_tl { #2 }
+    % \quark_if_no_value:NT \l_tmpa_tl { \tl_set:Nn \l_tmpa_tl { default } }
+
+    % Logic Branching
+    \bool_if:nTF { #1 }
+      {
+        % Starred version: Only set if NOT already defined
+        % We check if the 'department' data for this ID is empty/unset
+        \__mem_if_unset:nnT { Department } { \l_tmpa_tl }
+          { \MemSet { Department } { \l_tmpa_tl } { #3 } }
+      }
+      {
+        % Unstarred version: Set/Overwrite regardless
+        \MemSet { Department } { \l_tmpa_tl } { #3 }
+      }
+  }
+
+% 3. Helper to check if data is undefined/empty
+% (Adjust this if your \MemSet uses a different internal storage check)
+% \prg_new_conditional:Npnn \nova_if_data_unset:nn #1 #2 { p, T, F, TF }
+%   {
+%     % We expand the result of \MemGet to check if it's empty
+%     \tl_if_empty:eTF { \MemGet{#1}{#2} }
+%       { \prg_return_true:  }
+%       { \prg_return_false: }
+%   }
+
+% 4. Generate expansion variants
+\cs_generate_variant:Nn \nova_process_department:nnn { nee }
+
+\ExplSyntaxOff
+
+
+
+%
+%
+%
+% \def\ntdepartment{\@ifstar{\@ntdepartmentifundef}{\@ntdepartment}}
+% \def\@ntdepartmentifundef(#1)#2{\ifdatadefined{department}(#1){}{\@ntdepartment(#1){#2}}}
+% \def\@ntdepartment(#1)#2{\department(#1):={#2}}
 
 % --------------------------------------------------------
 % Degree
@@ -1715,7 +1805,7 @@
   \doctitle(#2,#1):={#3}%
   \NewlineToSpace{#3}[\tmp]
   \doctitle(#2,#1,plain):={\tmp}% 
-  \IfStrEq{#1}{main}{\doctitle(#2,spine):=?{\thedoctitle(#2,#1,plain)}}{}%
+  \IfStrEq{#1}{main}{\doctitle(#2,spine):={\tmp}}{}%
 }
 
 \ExplSyntaxOn
@@ -1750,6 +1840,7 @@
 
 %============================================================
 % Date and month
+%============================================================
 
 % \babelmonthname{<1..12>} → localized month name (current babel language)
 \newcommand{\babelmonthname}[1]{%
@@ -1825,40 +1916,123 @@
 % }
 
 
+\ExplSyntaxOn
 
-\newdata{ntdocdate}
+% 1. Define the message
+\msg_new:nnnn { date } { invalid-format }
+  { Invalid~ISO~date~format:~'#1'. }
+  { The~date~must~be~YYYY-MM~or~YYYY-MM-DD. }
 
-\def\ntdate{%
-  \@ifnextchar({\@ntdate@i}{\@ntdate@i(submission)}%
-}
+% 2. The Public Entry Point
+% We expand #1 and #2 immediately using the :ee variant
+\NewDocumentCommand{\SetDateISO}{ d() m }
+  {
+    \__nova_process_iso_date:ee { #1 } { #2 }
+  }
 
-% \usepackage{pgfcalendar} % For converting month names
+% 3. The Internal Logic
+\tl_new:N \l_tmp_year_tl
+\tl_new:N \l_tmp_month_tl
 
-\newcommand{\monthtotext}[1][\month]{\csuse{month\romannumeral#1 name}}
+\cs_new_protected:Npn \__nova_process_iso_date:nn #1 #2
+  {
+    % Handle the case where #1 (the optional ID) is not provided
+    \tl_set:Nn \l_tmpa_tl { #1 }
+    \quark_if_no_value:NT \l_tmpa_tl { \tl_set:Nn \l_tmpa_tl { default } }
 
-\def\@ntdate@i(#1)#2{%
-  \StrCut{#2}{-}\@NTDY\@NTDM%
-  \StrCut{\@NTDM}{-}\@NTDM\@NTDD%
-  \ntdocdate(#1):={#2}%
-  \ntdocdate(#1,year):={\@NTDY}%
-  \ntdocdate(#1,month):={\@NTDM}%
-  \ntdocdate(#1,day,0):={\@NTDD}%
-  \IfBeginWith{\@NTDD}{0}{\StrGobbleLeft{\@NTDD}{1}[\@NTDDNZ]}{\edef\@NTDDNZ{\@NTDD}}%
-  \ntdocdate(#1,day):={\@NTDDNZ}%
-  % \typeout{NTD(#1) Y=[\@NTDY] M=[\@NTDM] D=[\@NTDD]}\NTDATE%
-  \@for\myi:={year,month,day}\do{%
-    \IfInteger{\thentdocdate(#1,\myi)}{}
-              {\ClassError{The \myi\ in \string\ntdocdate(#1){#2} is not a number!}{}{}}%
-  }%
-  \ntdocdate(#1,month,text):={\monthtotext[\@NTDM]}%
-}
-\ntdocdate(default):={2000-09-01}
-\ntdate(submission){\thentdocdate(default)}
-\ntdate(exam){\thentdocdate(default)}
+    % 1. Validate syntax on the expanded string #2
+    \regex_match:nnTF { ^\d{4}-\d{2}(-\d{2})?$ } { #2 }
+      {
+        % 2. Split ISO string into a sequence
+        \seq_set_split:Nnn \l_tmpa_seq { - } { #2 }
+
+        % 3. Access components
+        \tl_set:Nx \l_tmp_year_tl  { \seq_item:Nn \l_tmpa_seq { 1 } }
+        \tl_set:Nx \l_tmp_month_tl { \seq_item:Nn \l_tmpa_seq { 2 } }
+
+        % 4. Global/Main storage (using our resolved ID in \l_tmpa_tl)
+        \MemSet{DocDate}{\l_tmpa_tl}{#2}
+        \MemSet{DocDate}{\l_tmpa_tl,year}{\l_tmp_year_tl}
+        \MemSet{DocDate}{\l_tmpa_tl,month}{\l_tmp_month_tl}
+
+        % 5. Check if Day exists (Fixed: \int_compare:nNnTF)
+        \int_compare:nNnTF { \seq_count:N \l_tmpa_seq } = { 3 }
+          {
+            \MemSet{DocDate}{\l_tmpa_tl,day}{ \int_eval:n { \seq_item:Nn \l_tmpa_seq { 3 } } }
+          }
+          {
+            \MemSet{DocDate}{\l_tmpa_tl,day}{}
+          }
+
+        % 6. Call monthtotext
+        \MemSet{DocDate}{\l_tmpa_tl,month,text}{ \monthtotext[\l_tmp_month_tl] }
+      }
+      {
+        \msg_error:nnn { date } { invalid-format } { #2 }
+      }
+  }
+
+% Define the 'ee' variant to force expansion of both arguments
+\cs_generate_variant:Nn \__nova_process_iso_date:nn { ee }
+
+% Month number to month name using babel
+\cs_new:Npn \nova_month_to_text:n #1
+  {
+    % \int_eval:n ensures leading zeros (like 09) are handled correctly
+    % \int_to_roman:n converts the number to lowercase roman (i, ii, iii...)
+    % \use:c builds the control sequence name and executes it
+    \use:c { month \int_to_roman:n { \int_eval:n { #1 } } name }
+  }
+
+\NewDocumentCommand{\monthtotext}{ O{\month} }
+  {
+    \nova_month_to_text:n { #1 }
+  }
+
+\ExplSyntaxOff
+
+
+
+\NewMemStore{DocDate}
+
+\let\ntdate\SetDateISO
+\SetDateISO(submission){2000-01-31}
+\SetDateISO(exam){2000-01-31}
+
+% \newdata{ntdocdate}
+%
+% \def\ntdate{%
+%   \@ifnextchar({\@ntdate@i}{\@ntdate@i(submission)}%
+% }
+%
+% % \usepackage{pgfcalendar} % For converting month names
+%
+% \newcommand{\monthtotext}[1][\month]{\csuse{month\romannumeral#1 name}}
+%
+% \def\@ntdate@i(#1)#2{%
+%   \StrCut{#2}{-}\@NTDY\@NTDM%
+%   \StrCut{\@NTDM}{-}\@NTDM\@NTDD%
+%   \SetDocDate(#1)={#2}%
+%   \SetDocDate(#1,year)={\@NTDY}%
+%   \SetDocDate(#1,month)={\@NTDM}%
+%   \SetDocDate(#1,day,0)={\@NTDD}%
+%   \IfBeginWith{\@NTDD}{0}{\StrGobbleLeft{\@NTDD}{1}[\@NTDDNZ]}{\edef\@NTDDNZ{\@NTDD}}%
+%   \ntdocdate(#1,day):={\@NTDDNZ}%
+%   % \typeout{NTD(#1) Y=[\@NTDY] M=[\@NTDM] D=[\@NTDD]}\NTDATE%
+%   \@for\myi:={year,month,day}\do{%
+%     \IfInteger{\GetDocDate(#1,\myi)}{}
+%               {\ClassError{The \myi\ in \string\SetDocDate(#1){#2} is not a number!}{}{}}%
+%   }%
+%   \SetDocDate(#1,month,text)={\monthtotext[\@NTDM]}%
+% }
+% \SetDocDate(default)={2000-09-01}
+% \ntdate(submission){\GetDocDate(default)}
+% \ntdate(exam){\GetDocDate(default)}
 
 
 %============================================================
 % Author identification
+%============================================================
 \newdata{docauthor}
 \docauthor(name):={Author Name}
 \docauthor(name,short):={Author Short Name}
@@ -1885,9 +2059,6 @@
 \nttitle(sub,\@LANG@COVER){\thedefaultntsubtitle(\@LANG@COVER)}
 \ntdepartment(\@LANG@COVER){\thedefaultntdepartment(\@LANG@COVER)}
 \ntdegreename(\@LANG@COVER){\thedefaultntdegreename(\@LANG@COVER)}
-\ntspecialization(\@LANG@COVER){\thedefaultntspecialization(\@LANG@COVER)}
-\ntauthordegree(\@LANG@COVER){\thedefaultntauthordegree(\@LANG@COVER)}
-
 
 
 %============================================================
@@ -2007,7 +2178,7 @@
           }%
         }%
       }%
-      \unskip%
+      % \unskip%
       \clearforchapter%
       \ignorespaces%
     \endgroup
@@ -2022,7 +2193,7 @@
 \newcommand{\myprintglossaries}{%
   % ignore if no glossaries were defined
   \ifoptioncontains{/@nt/listtypes}{glossaries}{
-    \ifoptionequal{/novathesis/print/glossaries}{off}
+    \ifoptionequal{/novathesis/print/glossaries}{false}
       {}{%
         \if@backmatter
           \def\@matter{backmatter}
@@ -2318,7 +2489,7 @@
 %       configuration file “0-Config/4_files.tex”
 %============================================================
 \input{\DIRCONFIG/4_files}
-\ntaddfile{bib}{\DIRNTFILES/fix-bib.bib}
+\ntaddfile{bib}{\DIRSTYFILES/fix-bib.bib}
 % \NTRunHook{files}
 
 %============================================================
@@ -2368,9 +2539,9 @@
 \ifdocunset{\ntsetup{docstatus=working}}{}
 
 \ifoptionequal{/novathesis/spine/layout}{unset}
-    {\ifdocworking{\ntsetup{spine/layout=off}}
+    {\ifdocworking{\ntsetup{spine/layout=false}}
                   {\ifmaindoc{\ntsetup{spine/layout=trim}}
-                             {\ntsetup{spine/layout=off}}}}
+                             {\ntsetup{spine/layout=false}}}}
     {}
 \ifdocfinal{\ntsetup{print/committee=true}}{}
 
@@ -2433,7 +2604,7 @@
     {
       {\DIRSCHOOLS/\@UNIV/\@SCHL/},
       {\DIRSCHOOLS/\@UNIV/},
-      {\DIRNTFILES/},
+      {\DIRSTYFILES/},
     }
     {\AtEndDocument{\csuse{ntprintspine}}}
     {\ClassError{novathesis}{No “novathesis-spine” file found.}{}}%
@@ -2534,7 +2705,6 @@
     \ntfor\arg:={#1}\do{\ntprintcoverpair{\arg}}%
     \NTRunHook{printcovers/post}%
   \endgroup%
-  \setcounter{page}{0}%
   \pagecolor{white}%
 }
 
@@ -2556,7 +2726,6 @@
         \endgroup
         \clearpage%
       }%
-      % \ntprintcoversingle{2-1}%
     }{}%
   }{% Pre-defined cover page  
     \IfStrEqCase{#1}{%
@@ -3447,6 +3616,9 @@
   \copypagestyle{chapter}{novathesis@frontmatter}
   % \ntselectlang{\@LANG@MAIN}%
   \pagenumbering{roman}%
+  \iftoggle{/novathesis/print/frontpage}
+    {\setcounter{page}{2}}
+    {\setcounter{page}{1}}
 }
 
 \newif\if@mainmatter
@@ -3750,7 +3922,7 @@
         {
           {\DIRSCHOOLS/\@UNIV/\@SCHL},
           {\DIRSCHOOLS/\@UNIV},
-          {\DIRNTFILES},
+          {\DIRSTYFILES},
         }
         {}
         {
@@ -3806,9 +3978,7 @@
   %          6=[#6]
   %          7=[#7]
   % }\asdfg
-  \iftoggle{/novathesis/numberallpages}%
-    {\thispagestyle{novathesis@frontmatter}}%
-    {\thispagestyle{empty}}%
+  \thispagestyle{novathesis@frontmatter}%
   \defifundef{\ntqbox}{\newsavebox}%
   \savebox{\ntqbox}{#7}
   \ifdim\wd\ntqbox<\ifblank{#2}{\textwidth}{#2}\relax
@@ -3824,7 +3994,7 @@
       \raggedleft\normalsize
       % \options{/@nt/lang/shorttolong=#6}%
       \IfBooleanTF{#1}{%
-        \foreigntextquote{\thelanglong(#6)}{\ntquotetext{#7}}%
+        \foreigntextquote{\GetLangLong(#6)}{\ntquotetext{#7}}%
       }{\ntquotetext#7}
       \ifblank{#3}{}{\ntquoteauthor{#3}}%
       \ifblank{#4}{}{\ntquotewhere{#4}}%
@@ -3894,7 +4064,6 @@
 }
 
 \providecommand\thecopyrightstr{%
-    % \iftoggle{/novathesis/numberallpages}%
      {\thispagestyle{novathesis@frontmatter}}%
      % {\thispagestyle{empty}}%
     \noindent%
