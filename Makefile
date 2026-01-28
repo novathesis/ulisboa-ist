@@ -2,12 +2,15 @@
 # NOVATHESIS — Makefile
 #----------------------------------------------------------------------------
 #
-# Version 7.10.0 (2026-01-27)
+# Version 7.10.0 (2026-01-28)
 # Copyright (C) 2004-26 by João M. Lourenço <joao.lourenco@fct.unl.pt>
 
 
 #----------------------------------------------------------------------------
 # CUSTOMIZATION AREA HERE
+
+# Use bash and not sh
+SHELL := /bin/bash
 
 # Define V command to the name of your PDF viewer
 PDFVIEWER ?= open -a skim
