@@ -1,0 +1,206 @@
+%!TEX root = ../template.tex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Config/4_files.tex
+%% NOVA thesis configuration file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\typeout{NT FILE Config/4_files.tex}%
+
+%=============================================================================
+% THE FILES
+%=============================================================================
+
+%-------------------------------------------------------------
+%% Except for the bibliography, all the other FILE NAMES below
+%%     inside braces must correspond to a file with extension
+%%     ".tex" and located in the "Chapters" folder
+%-------------------------------------------------------------
+
+%-------------------------------------------------------------
+% BibTeX bibliography files and customization.
+%.............................................................
+%
+% May be used multiple times with a single file name each time
+%-------------------------------------------------------------
+\ntaddfile{bib}{bibliography.bib}
+%\ntaddfile{bib}{anotherbibfile.bib}
+
+
+
+%-------------------------------------------------------------
+% File with the dedication text.
+%.............................................................
+%
+% Ignored if 'status=working'
+%-------------------------------------------------------------
+\ntaddfile{dedication}{dedication}
+
+
+
+%-------------------------------------------------------------
+% File with the acknowledgments text.
+%.............................................................
+%
+% Ignored if 'status=working'
+%-------------------------------------------------------------
+\ntaddfile{acknowledgements}{acknowledgements}
+
+
+
+%-------------------------------------------------------------
+% File with the statement text.
+%.............................................................
+%
+% Ignored if 'status=working'
+%-------------------------------------------------------------
+% \ntaddfile{statement}[en]{univ-school/statement-en}
+% \ntaddfile{statement}[pt]{univ-school/statement-pt}
+
+
+
+%-------------------------------------------------------------
+% File with the qute text.
+%.............................................................
+%
+% Ignored if 'status=working'
+%-------------------------------------------------------------
+\ntaddfile{quote}{quote}
+
+
+
+%-------------------------------------------------------------
+% Abstracts
+%
+%     \ntaddfile{abstract}[<lang>]{<filename>}
+%.............................................................
+%
+% <lang>: -> cat (catalan), cz (czech), de (german), dk (danish), en (english), 
+%            es (spanish), fr (french), gr (greek), it (italian), nl (dutch), 
+%            pl (polish), pt (portuguese), sk (slovak), uk (ukrainian)
+%            zhs (chinese simplified), zht (chinese traditional)
+%
+% <filename>: -> must be '1-Frontmatter/filename.tex'
+%
+% Specifically for ULISBOA-FMV, the extended asbtract
+%       \ntaddfile{abstract}[pt-ext]{abstract-pt-ext}
+%-------------------------------------------------------------
+\ntaddfile{abstract}[pt]{abstract-pt}  % Abstract in Portuguese
+\ntaddfile{abstract}[en]{abstract-en}  % Abstract in English
+% \ntaddfile{abstract}[de]{abstract-de}  % Abstract in German
+% \ntaddfile{abstract}[es]{abstract-es}  % Abstract in Spanish
+% \ntaddfile{abstract}[fr]{abstract-fr}  % Abstract in French
+% \ntaddfile{abstract}[it]{abstract-it}  % Abstract in Italian
+% \ntaddfile{abstract}[gr]{abstract-gr}  % Abstract in Greek
+% \ntaddfile{abstract}[uk]{abstract-uk}  % Abstract in Ukrainian
+% \ntaddfile{abstract}[zhs]{abstract-zhs}  % Abstract in Chinese (Simplified)
+% \ntaddfile{abstract}[zht]{abstract-zht}  % Abstract in Chinese (Traditional)
+% % \ntaddfile{abstract}[pt-ext]{abstract-pt-ext}  % Extended abstract in Portuguese (e.g., for ulisboa/fmv)
+
+
+
+%-------------------------------------------------------------
+% Glossaies (glossary, acronyms, symbols, etc)
+%
+%     \ntaddfile{glossaries}[<type>]{<filename>}
+%.............................................................
+%
+% <filename>: -> must be '1-Frontmatter/filename.tex'
+%
+% <type>:  glossary -> Glossay (longer dictionary like entries)
+%           acronym -> Acronyms and their meaning
+%           symbols -> Symbols and their meaning
+%-------------------------------------------------------------
+\ntaddfile{glossaries}[glossary]{glossary}
+\ntaddfile{glossaries}[acronym]{acronyms}
+\ntaddfile{glossaries}[symbols]{symbols}
+% \ntaddfile{glossaries}[symbols]{chemical}
+
+
+
+%-------------------------------------------------------------
+% Main text - document chapters
+%
+%     \ntaddfile{chapter}[<optional-doctype-list>]{<filename>}
+%.............................................................
+%
+% <filename>: -> must be '2-MainMatter/filename.tex'
+%
+% <optional-doctype-list>:  -> A comma-separateed list of doctypes.
+%                              The valid doctypes are listed in file
+%                              '1_novathesis.tex', option 'doctype'.
+%
+% If present, the chapter will only be included in the given doc types.
+% If omitted, the chapter will always be included.
+%-------------------------------------------------------------
+\ntaddfile{chapter}{chapter1}
+\ntaddfile{chapter}{chapter2}
+\ntaddfile{chapter}{chapter3}
+\ntaddfile{chapter}{chapter4}
+% The following chapter would only be included
+% in MSc and MSc-plan documents
+%     \ntaddfile{chapter}[mscplan,msc]{chapter-last}
+
+
+
+%-------------------------------------------------------------
+% Apppendices
+%
+%     \ntaddfile{appendix}[<optional-doctype-list>]{<filename>}
+%.............................................................
+%
+% <filename>: -> must be '2-MainMatter/filename.tex'
+%
+% <optional-doctype-list>:  -> A comma-separateed list of doctypes.
+%                              The valid doctypes are listed in file
+%                              '1_novathesis.tex', option 'doctype'.
+%
+% If present, the appendix will only be included in the given doc types.
+% If omitted, the appendix will always be included.
+%-------------------------------------------------------------
+\ntaddfile{appendix}{appendix1}
+\ntaddfile{appendix}{appendix2}
+
+
+
+%-------------------------------------------------------------
+% Apppendices
+%
+%     \ntaddfile{annex}[<optional-doctype-list>]{<filename>}
+%.............................................................
+%
+% <filename>: -> must be '2-MainMatter/filename.tex'
+%
+% <optional-doctype-list>:  -> A comma-separateed list of doctypes.
+%                              The valid doctypes are listed in file
+%                              '1_novathesis.tex', option 'doctype'.
+%
+% If present, the annex will only be included in the given doc types.
+% If omitted, the annex will always be included.
+%-------------------------------------------------------------
+\ntaddfile{annex}{annex1}
+% \ntaddfile{annex}{annex2}
+% \ntaddfile{annex}{annex2}
+
+
+
+%-------------------------------------------------------------
+% Covers
+%
+%     \ntaddfile{cover}[<cover-id>]{<filename>}
+%.............................................................
+%
+% <filename>:   -> must be '1-Frontmatter/filename.tex'
+%
+% <cover-id>: 1 -> The main cover
+%             2 -> The front page
+%             N -> The back cover
+%         spine -> The back cover
+%
+% The given file will be used to render the cover <cover-id>
+% Note: if you want to skip prnting the frontpage, do not
+%       redefine the frontpage! Instead use the command
+%       \ntsetup{print/frontpage=false}
+%-------------------------------------------------------------
+% \ntaddfile{cover}[1]{cover-page}
+
+
