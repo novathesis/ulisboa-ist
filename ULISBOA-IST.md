@@ -1,8 +1,8 @@
-# Abstract: novathesis-ulisboa-ist-v8.0.0
+# Abstract: novathesis-ulisboa-ist-v8.0.1
 
 This is a customized LaTeX template for theses and reports at **Instituto Superior Técnico da Universidade de Lisboa (ULISBOA IST)**, following the most recent [ULISBOA IST guidelines (in Portuguese)](https://posgraduacao.tecnico.ulisboa.pt/programas-doutorais/provas-academicas/). 
 
-This template is a streamlined and fine-tuned version of the robust **NOVAthesis framework (v8.0.0)**, trimmed down and optimized to provide ULISBOA IST students with a streamlined experience, meeting ULISBOA IST's academic formatting standards without the complexity of the original multi-institution template. 
+This template is a streamlined and fine-tuned version of the robust **NOVAthesis framework (v8.0.1)**, trimmed down and optimized to provide ULISBOA IST students with a streamlined experience, meeting ULISBOA IST's academic formatting standards without the complexity of the original multi-institution template. 
 
 ### Key Features:
 

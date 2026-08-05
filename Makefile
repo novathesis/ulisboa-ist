@@ -1,6 +1,6 @@
 #-----------------------------------------------------------------------------
 # NOVAthesis — Makefile
-# Version 8.0.0 (2026-07-27)
+# Version 8.0.1 (2026-08-05)
 #
 # The build engine is latexmk; all LaTeX-specific behavior (engine defaults,
 # biber, glossaries, clean lists) lives in ./latexmkrc.
@@ -61,6 +61,12 @@ LATEXMK  := latexmk
 LMKFLAGS := -time -file-line-error -shell-escape -synctex=1 \
             -output-directory=$(AUXDIR)
 
+# Wall-clock timer wrapped around the build (see .Build/nt-time.sh).  It passes
+# the command through untouched and preserves its exit status, so it is safe in
+# front of any recipe.  Disable the report with NT_TIME=0.
+# Deliberately NOT applied to the 'watch' targets: latexmk -pvc never returns.
+TIMER := .Build/nt-time.sh
+
 ifeq ($(BATCH),1)
   LMKFLAGS += -interaction=batchmode
 else
@@ -104,7 +110,7 @@ lua pdf xe: build
 
 build:
 	@mkdir -p $(AUXDIR)
-	$(RUN) $(LATEXMK) $(ENG) $(LMKFLAGS) $(BASE).tex
+	$(TIMER) $(RUN) $(LATEXMK) $(ENG) $(LMKFLAGS) $(BASE).tex
 	@cp -f $(AUXDIR)/$(BASE).pdf . 2>/dev/null || true
 	@cp -f $(AUXDIR)/$(BASE).synctex.gz . 2>/dev/null || true
 
